@@ -1,16 +1,15 @@
 package it.unibo.mvc;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
-
+import java.util.StringTokenizer;
 /**
  */
 public final class DrawNumberApp implements DrawNumberViewObserver {
-    private static final int MIN = 0;
-    private static final int MAX = 100;
-    private static final int ATTEMPTS = 10;
-
     private final DrawNumber model;
     private final List<DrawNumberView> views;
 
@@ -27,7 +26,44 @@ public final class DrawNumberApp implements DrawNumberViewObserver {
             view.setObserver(this);
             view.start();
         }
-        this.model = new DrawNumberImpl(MIN, MAX, ATTEMPTS);
+
+        final Configuration.Builder configFromFile = new Configuration.Builder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(ClassLoader.getSystemResourceAsStream("config.yml")))) {
+            String setting;
+            while ((setting = reader.readLine()) != null) {
+                StringTokenizer stringTokenizer = new StringTokenizer(setting, ": ");
+                switch (stringTokenizer.nextToken()) {
+                    case "minimum":
+                        configFromFile.setMin(Integer.valueOf(stringTokenizer.nextToken()));
+                        break;
+                    case "maximum":
+                        configFromFile.setMax(Integer.valueOf(stringTokenizer.nextToken()));
+                        break;
+                    case "attempts":
+                        configFromFile.setAttempts(Integer.valueOf(stringTokenizer.nextToken()));
+                        break;
+                    default:
+                        break;
+                }
+            }
+        } catch (IOException e) {
+            displayError(e.getMessage());
+        }
+
+        final Configuration configuration = configFromFile.build();
+        if (configuration.isConsistent()) {
+            this.model = new DrawNumberImpl(configuration.getMin(), configuration.getMax(), configuration.getAttempts());
+        } else {
+            displayError("Inconsistent configuration, proceeding with Default");
+            final Configuration defaultConfig = new Configuration.Builder().build(); 
+            this.model = new DrawNumberImpl(defaultConfig.getMin(), defaultConfig.getMax(), defaultConfig.getAttempts());
+        }
+    }
+
+    private void displayError(final String err) {
+        for (final DrawNumberView view: views) {
+            view.displayError(err);
+        }
     }
 
     @Override

@@ -34,7 +34,6 @@ public class BadIOGUI {
     private static final int PROPORTION = 5;
     private final Random randomGenerator = new Random();
     private final JFrame frame = new JFrame(TITLE);
-
     /**
      * Creates a new BadIOGUI.
      */
@@ -42,7 +41,6 @@ public class BadIOGUI {
         final JPanel canvas = new JPanel();
         canvas.setLayout(new BorderLayout());
         final JButton write = new JButton("Write on file");
-        canvas.add(write, BorderLayout.CENTER);
         frame.setContentPane(canvas);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         /*
@@ -52,7 +50,7 @@ public class BadIOGUI {
             @Override
             public void actionPerformed(final ActionEvent e) {
                 /*
-                 * This would be VERY BAD in a real application.
+                 * This would be VERY BAD in a real application.PROPORTION
                  * 
                  * This makes the Event Dispatch Thread (EDT) work on an I/O
                  * operation. I/O operations may take a long time, during which
@@ -62,6 +60,27 @@ public class BadIOGUI {
                     ps.print(randomGenerator.nextInt());
                 } catch (IOException e1) {
                     JOptionPane.showMessageDialog(frame, e1, "Error", JOptionPane.ERROR_MESSAGE);
+                    e1.printStackTrace(); // NOPMD: allowed as this is just an exercise
+                }
+            }
+        });
+
+        final JPanel horizontalJP = new JPanel();
+        horizontalJP.setLayout(new BoxLayout(horizontalJP, BoxLayout.X_AXIS));
+        canvas.add(horizontalJP, BorderLayout.CENTER);
+        horizontalJP.add(write);
+
+        final JButton read = new JButton("Read from a file");
+        horizontalJP.add(read);
+        read.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                try {
+                    final File toRead = new File(PATH);
+                    final List<String> text = 
+                        Files.readAllLines(toRead.toPath(), StandardCharsets.UTF_8); // NOPMD: allowed as this is just an exercise
+                    System.out.println(text.toString()); // NOPMD: allowed as this is just an exercise
+                } catch (IOException e1) {
                     e1.printStackTrace(); // NOPMD: allowed as this is just an exercise
                 }
             }
@@ -87,6 +106,7 @@ public class BadIOGUI {
          * on screen. Results may vary, but it is generally the best choice.
          */
         frame.setLocationByPlatform(true);
+        frame.pack();
         /*
          * OK, ready to push the frame onscreen
          */
